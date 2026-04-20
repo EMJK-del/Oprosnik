@@ -193,57 +193,41 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
       ]
     },
     { id: 'ethics', number: 'II', title: 'Этика и отношение к другим',
-      intro: 'Honesty-Humility — единственный устойчивый негативный предиктор неэтичного поведения (Heck et al., 2018). Тёмная триада: нарциссизм, макиавеллизм, психопатия (Paulhus & Williams, 2002).',
-      type: 'check',
-      groups: [
-        { title: 'Когда никто не смотрит', items: [
-          'Честен в мелочах, когда можно было бы слукавить',
-          'Одинаков с начальством, с вами и с обслуживающим персоналом',
-          'Не использует лесть стратегически',
-          'Не готов обходить правила из «всё равно не узнают»',
-          'Не присваивает чужие идеи или заслуги'
-        ]},
-        { title: 'Статус и скромность', items: [
-          'Не оценивает людей по деньгам, брендам, связям',
-          'Не требует особого отношения',
-          'Уважителен с официантами, курьерами, уборщицами',
-          'Не занимается name-dropping'
-        ]},
-        { title: 'Тревожные маркеры', inverted: true, items: [
-          'Переводит разговор на себя почти всегда',
-          'Обидчив, постоянно чувствует себя недооценённым',
-          'Циничный взгляд: «все корыстны»',
-          'Лжёт без видимой выгоды',
-          'Смешно, когда кто-то унижен',
-          'Любит жестокие розыгрыши, троллинг',
-          'Использует вашу уязвимость против вас потом'
-        ]}
+      intro: 'Honesty-Humility — единственный устойчивый негативный предиктор неэтичного поведения (Heck et al., 2018). Тёмная триада: нарциссизм, макиавеллизм, психопатия (Paulhus & Williams, 2002). Отмечайте только то, что явно замечаете.',
+      type: 'check', inverted: true,
+      items: [
+        'Нечестен в мелочах, когда можно слукавить',
+        'Разный с начальством, с вами и с обслуживающим персоналом',
+        'Использует лесть стратегически с полезными людьми',
+        'Готов обходить правила «раз всё равно не узнают»',
+        'Присваивает чужие идеи или заслуги',
+        'Оценивает людей по деньгам, брендам, связям',
+        'Требует особого отношения — «знаете, кто я?»',
+        'Неуважителен с официантами, курьерами, уборщицами',
+        'Name-dropping для статуса',
+        'Переводит разговор на себя почти всегда',
+        'Обидчив, постоянно чувствует себя недооценённым',
+        'Циничный взгляд: «все корыстны»',
+        'Лжёт без видимой выгоды',
+        'Ему смешно, когда кто-то унижен',
+        'Любит жестокие розыгрыши, троллинг',
+        'Использует вашу уязвимость против вас потом'
       ]
     },
     { id: 'attachment', number: 'III', title: 'Эмоциональная доступность',
-      intro: 'Теория привязанности: безопасный стиль — предиктор лучшей дружбы (Welch & Houser, 2010). Ключ — способность к ментализации.',
-      type: 'check',
-      groups: [
-        { title: 'Безопасная привязанность', items: [
-          'Прямо называет чувства',
-          'Просит поддержку словами, не манипуляциями',
-          'Толерантен к разлуке',
-          'После конфликта возвращается, признаёт свою часть',
-          'Поддерживает сфокусированно на вашей проблеме'
-        ]},
-        { title: 'Способность к рефлексии', items: [
-          'Может сказать: «возможно, она не хотела обидеть»',
-          'Корректирует интерпретацию при новой информации',
-          'Признаёт: «я реагирую острее, потому что у меня плохой день»'
-        ]},
-        { title: 'Тревожные паттерны', inverted: true, items: [
-          'Постоянно проверяет: «ты на меня не злишься?»',
-          'Гипер-реагирует на задержку ответа',
-          'Ревнует к вашим другим друзьям',
-          'Обесценивает близость: «мне никто не нужен»',
-          'В стрессе пропадает полностью',
-          'Парадокс «приблизиться-отдалиться», тестирует вас'
-        ]}
+      intro: 'Теория привязанности (Welch & Houser, 2010). Отмечайте только явно повторяющиеся паттерны — единичные эпизоды могут быть стрессом или плохим днём.',
+      type: 'check', inverted: true,
+      items: [
+        'Постоянно проверяет: «ты на меня не злишься?»',
+        'Гипер-реагирует на задержку ответа',
+        'Ревнует к вашим другим друзьям',
+        'Обесценивает близость: «мне никто не нужен»',
+        'В стрессе пропадает полностью',
+        'Парадокс «приблизиться-отдалиться», тестирует вас',
+        'Не может назвать свои чувства прямо, использует намёки',
+        'После конфликта не возвращается, не признаёт свою часть',
+        'Не способен сказать: «я реагирую остро, потому что плохой день»',
+        'Категоричен в интерпретациях — «она специально меня обидела»'
       ]
     },
     { id: 'empathy', number: 'IV', title: 'Эмпатия: настоящая или выборочная',
@@ -488,6 +472,8 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
         section.groups.forEach(function(group) {
           var subTitle = document.createElement('div');
           subTitle.className = 'subsection';
+          // Show ⚠ only if the group itself is marked inverted
+          // (not when the whole section is inverted — that's already implied)
           if (group.inverted) subTitle.textContent = '⚠ ' + group.title;
           else subTitle.textContent = group.title;
           body.appendChild(subTitle);
@@ -593,8 +579,7 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
 
     var labelSpan = document.createElement('span');
     if (type === 'scale') labelSpan.textContent = 'Средняя по разделу';
-    else if (mixed) labelSpan.textContent = 'Зелёных / тревожных';
-    else labelSpan.textContent = inverted ? 'Тревожных отметок' : 'Отмечено';
+    else labelSpan.textContent = 'Тревожных маркеров';
     score.appendChild(labelSpan);
 
     var rightSide = document.createElement('span');
@@ -686,7 +671,8 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
       for (var i = 0; i < section.groups.length; i++) {
         var g = section.groups[i];
         var keyBase = groupKeyBase(section.id, g.title);
-        var groupInverted = !!g.inverted;
+        // Group is inverted if it has its own flag OR if the whole section is inverted
+        var groupInverted = !!g.inverted || sectionInverted;
         for (var j = 0; j < g.items.length; j++) {
           var isChecked = !!state[keyBase + '-' + j];
           if (groupInverted) {
@@ -713,7 +699,6 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
     return {
       greenChecked: greenChecked, greenTotal: greenTotal,
       redChecked: redChecked, redTotal: redTotal,
-      // Legacy fields for compat
       checked: greenChecked + redChecked,
       total: greenTotal + redTotal,
       inverted: sectionInverted
@@ -765,24 +750,15 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
       }
     } else {
       var cs = sectionCheckStats(section);
-      var hasGreen = cs.greenTotal > 0;
-      var hasRed = cs.redTotal > 0;
-
-      if (hasGreen && hasRed) {
-        // Mixed section (e.g. Этика) — show both counts
-        valEl.textContent = '✓ ' + cs.greenChecked + ' / ⚠ ' + cs.redChecked;
-        // Badge is based on red flags primarily
-        var cbm = checkBadge(cs.redChecked, cs.redTotal, true);
-        badgeEl.textContent = cbm.label;
-        badgeEl.className = 'section-score-badge ' + cbm.cls;
-      } else if (hasRed) {
-        // Pure alarm section (e.g. Gottman) — inverted logic
-        valEl.textContent = cs.redChecked + ' из ' + cs.redTotal;
+      // Unified logic: we care about red flags only.
+      // No red flags = clean. Any red flag shifts interpretation.
+      if (cs.redTotal > 0) {
+        valEl.textContent = cs.redChecked === 0 ? 'чисто' : cs.redChecked + ' из ' + cs.redTotal;
         var cbr = checkBadge(cs.redChecked, cs.redTotal, true);
         badgeEl.textContent = cbr.label;
         badgeEl.className = 'section-score-badge ' + cbr.cls;
       } else {
-        // Pure positive section
+        // Pure green section (rare — all items are positive traits)
         valEl.textContent = cs.greenChecked + ' из ' + cs.greenTotal;
         var cbg = checkBadge(cs.greenChecked, cs.greenTotal, false);
         badgeEl.textContent = cbg.label;
