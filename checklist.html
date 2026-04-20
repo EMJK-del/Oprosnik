@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чек-лист: анализ знакомых</title>
+<style>
+:root {
+  --bg: #f4f1ea;
+  --paper: #fdfbf5;
+  --ink: #1a1a1a;
+  --muted: #6b6357;
+  --accent: #8b3a2f;
+  --accent-soft: #c8a89c;
+  --line: #d8d0c0;
+  --green: #5a7a4f;
+  --amber: #b8883a;
+  --red: #9a3c2c;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  font-size: 17px;
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+
+.container { max-width: 780px; margin: 0 auto; padding: 30px 20px 100px; }
+
+header { text-align: center; padding: 20px 0 40px; border-bottom: 1px solid var(--line); margin-bottom: 32px; }
+header::before { content: '❦'; display: block; font-size: 22px; color: var(--accent); margin-bottom: 16px; opacity: 0.6; }
+
+h1 { font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 12px; }
+.subtitle { font-style: italic; color: var(--muted); font-size: 15px; max-width: 480px; margin: 0 auto; }
+
+.person-card { background: var(--paper); border: 1px solid var(--line); padding: 20px 24px; margin-bottom: 28px; border-radius: 2px; }
+.person-card label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 10px; }
+.person-card input { width: 100%; padding: 8px 0; font-family: inherit; font-size: 20px; border: none; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); outline: none; }
+.person-card input:focus { border-bottom-color: var(--accent); }
+
+.instructions { background: var(--paper); border-left: 3px solid var(--accent); padding: 18px 20px; margin-bottom: 28px; font-size: 14px; color: var(--muted); border-radius: 0 2px 2px 0; }
+.instructions strong { color: var(--ink); font-weight: 700; }
+
+.progress-wrap { position: sticky; top: 0; padding: 14px 0; z-index: 50; margin-bottom: 24px; border-bottom: 1px solid var(--line); background: var(--bg); }
+.progress-bar { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; }
+.progress-text { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.section { margin-bottom: 24px; background: var(--paper); border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.section-header { padding: 20px 22px; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.section-header-main { flex: 1; }
+.section-number { font-style: italic; color: var(--accent); font-size: 13px; letter-spacing: 0.08em; margin-bottom: 4px; display: block; }
+.section-title { font-size: 21px; font-weight: 400; line-height: 1.25; color: var(--ink); }
+.section-toggle { font-size: 18px; color: var(--muted); flex-shrink: 0; margin-top: 4px; transition: transform 0.2s; }
+.section.collapsed .section-toggle { transform: rotate(-90deg); }
+.section.collapsed .section-body { display: none; }
+.section-body { padding: 20px 22px 24px; }
+.section-intro { font-size: 13px; color: var(--muted); font-style: italic; padding: 12px 16px; background: rgba(139, 58, 47, 0.04); border-left: 2px solid var(--accent-soft); margin-bottom: 20px; line-height: 1.55; }
+
+.item { padding: 14px 0; border-bottom: 1px dashed var(--line); }
+.item:last-child { border-bottom: none; }
+.item-text { font-size: 15px; line-height: 1.5; margin-bottom: 12px; color: var(--ink); }
+.item-number { color: var(--accent); font-weight: 700; margin-right: 6px; }
+
+.scale { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.scale-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; width: 100%; margin-bottom: 4px; }
+.scale-btn { width: 44px; height: 44px; border: 1px solid var(--line); background: var(--paper); font-family: inherit; font-size: 15px; cursor: pointer; color: var(--muted); border-radius: 50%; padding: 0; transition: all 0.15s; }
+.scale-btn:active { transform: scale(0.95); }
+.scale-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.scale-ends { font-size: 10px; color: var(--muted); margin-top: 8px; display: flex; justify-content: space-between; font-style: italic; }
+
+.check { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.check:last-child { border-bottom: none; }
+.check input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 22px; height: 22px; border: 1.5px solid var(--line); border-radius: 3px; cursor: pointer; flex-shrink: 0; margin-top: 1px; position: relative; background: var(--paper); transition: all 0.15s; }
+.check input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+.check input[type="checkbox"]:checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%); color: white; font-size: 15px; font-weight: 700; }
+.check-text { flex: 1; line-height: 1.5; font-size: 15px; }
+.check-text.checked { text-decoration: line-through; color: var(--muted); }
+
+.subsection { font-size: 13px; font-style: italic; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--accent-soft); }
+.subsection:first-child { margin-top: 0; }
+
+.section-score { margin-top: 20px; padding: 14px 18px; background: rgba(139, 58, 47, 0.05); border-radius: 2px; font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.section-score-value { font-size: 20px; color: var(--ink); }
+.section-score-right { display: flex; align-items: center; gap: 10px; }
+.section-score-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.badge-green { background: rgba(90, 122, 79, 0.15); color: var(--green); }
+.badge-amber { background: rgba(184, 136, 58, 0.15); color: var(--amber); }
+.badge-red { background: rgba(154, 60, 44, 0.15); color: var(--red); }
+.badge-neutral { background: rgba(107, 99, 87, 0.15); color: var(--muted); }
+
+.summary { margin-top: 40px; padding: 32px 24px; background: var(--paper); border: 2px solid var(--accent); border-radius: 2px; }
+.summary h2 { font-size: 26px; font-weight: 400; margin-bottom: 20px; text-align: center; color: var(--accent); }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 24px; }
+.summary-card { padding: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 2px; text-align: center; }
+.summary-card-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.summary-card-value { font-size: 18px; color: var(--ink); }
+.summary-interpretation { padding: 18px; background: var(--bg); border-radius: 2px; font-size: 14px; line-height: 1.6; color: var(--ink); }
+.summary-interpretation strong { color: var(--accent); }
+
+.actions { display: flex; gap: 10px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+.btn { padding: 11px 20px; border: 1px solid var(--accent); background: var(--paper); color: var(--accent); font-family: inherit; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px; }
+.btn:active { background: var(--accent); color: white; }
+
+footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-size: 12px; font-style: italic; line-height: 1.6; }
+
+.save-indicator { position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: white; padding: 8px 14px; border-radius: 20px; font-size: 12px; opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; }
+.save-indicator.show { opacity: 1; }
+
+@media print { body { background: white; } .progress-wrap, .actions, .save-indicator { display: none; } .section { break-inside: avoid; } }
+@media (max-width: 600px) { .container { padding: 16px 14px 80px; } h1 { font-size: 24px; } .section-body { padding: 16px 18px 20px; } .section-header { padding: 16px 18px; } .section-title { font-size: 19px; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>Анализ знакомого человека</h1>
+    <p class="subtitle">Структурированный чек-лист на основе исследований в психологии отношений</p>
+  </header>
+
+  <div class="person-card">
+    <label for="person-name">О ком размышляю</label>
+    <input type="text" id="person-name" placeholder="Имя или инициалы" autocomplete="off" />
+  </div>
+
+  <div class="instructions">
+    <strong>Как пользоваться.</strong> Не спешите — идите в своём темпе. Смотрите на паттерны за месяцы, а не на эпизоды. Шкала 1–5: 1 — почти никогда, 5 — почти всегда. Прогресс сохраняется в браузере автоматически.
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-text">
+      <span id="progress-label">Шкалы: 0 из 0</span>
+      <span id="progress-percent">0%</span>
+    </div>
+  </div>
+
+  <div id="sections-container">
+    <div style="padding: 40px; text-align: center; color: #6b6357;">Загрузка...</div>
+  </div>
+
+  <div class="summary">
+    <h2>Итоговая картина</h2>
+    <div class="summary-grid" id="summary-grid"></div>
+    <div class="summary-interpretation" id="summary-interpretation">Заполните разделы со шкалами, чтобы увидеть сводную оценку.</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="btn-print">Распечатать</button>
+    <button class="btn" id="btn-export">Экспорт в файл</button>
+    <button class="btn" id="btn-reset">Очистить всё</button>
+  </div>
+
+  <footer>
+    Чек-лист — не клинический инструмент. Паттерны важнее эпизодов.<br>
+    Стресс, травма, нейроотличия могут имитировать тревожные признаки.<br>
+    При серьёзных сомнениях — консультация психотерапевта.
+  </footer>
+
+</div>
+
+<div class="save-indicator" id="save-indicator">Сохранено</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var STORAGE_KEY = 'person-analysis-checklist-v1';
+  var NAME_KEY = 'person-analysis-name-v1';
+
+  var sections = [
+    { id: 'reliability', number: 'I', title: 'Надёжность',
+      intro: 'Big Five Conscientiousness и HEXACO Honesty-Humility — ключевые предикторы надёжности (Malouff et al., 2010; Ashton & Lee, 2007).',
+      type: 'scale',
+      items: [
+        'Выполняет обещания даже по мелочам — «напишу на неделе» пишет',
+        'Приходит вовремя или предупреждает о задержке заранее',
+        'Возвращает взятые вещи и деньги без напоминаний',
+        'Отвечает на сообщения в разумный срок или объясняет задержку',
+        'Если обещал помочь — помогает, а не исчезает',
+        'Признаёт ошибки без того, чтобы его загонять в угол',
+        'Его версия событий от раза к разу связна',
+        'Поведение согласуется: в мессенджере, лицом к лицу, с третьими',
+        'Хранит конфиденциальность — ваши слова не всплывают у других',
+        'Долгосрочные отношения (работа, дружба, семья) стабильны'
+      ]
+    },
+    { id: 'ethics', number: 'II', title: 'Этика и отношение к другим',
+      intro: 'Honesty-Humility — единственный устойчивый негативный предиктор неэтичного поведения (Heck et al., 2018). Тёмная триада: нарциссизм, макиавеллизм, психопатия (Paulhus & Williams, 2002).',
+      type: 'check',
+      groups: [
+        { title: 'Когда никто не смотрит', items: [
+          'Честен в мелочах, когда можно было бы слукавить',
+          'Одинаков с начальством, с вами и с обслуживающим персоналом',
+          'Не использует лесть стратегически',
+          'Не готов обходить правила из «всё равно не узнают»',
+          'Не присваивает чужие идеи или заслуги'
+        ]},
+        { title: 'Статус и скромность', items: [
+          'Не оценивает людей по деньгам, брендам, связям',
+          'Не требует особого отношения',
+          'Уважителен с официантами, курьерами, уборщицами',
+          'Не занимается name-dropping'
+        ]},
+        { title: 'Тревожные маркеры', inverted: true, items: [
+          'Переводит разговор на себя почти всегда',
+          'Обидчив, постоянно чувствует себя недооценённым',
+          'Циничный взгляд: «все корыстны»',
+          'Лжёт без видимой выгоды',
+          'Смешно, когда кто-то унижен',
+          'Любит жестокие розыгрыши, троллинг',
+          'Использует вашу уязвимость против вас потом'
+        ]}
+      ]
+    },
+    { id: 'attachment', number: 'III', title: 'Эмоциональная доступность',
+      intro: 'Теория привязанности: безопасный стиль — предиктор лучшей дружбы (Welch & Houser, 2010). Ключ — способность к ментализации.',
+      type: 'check',
+      groups: [
+        { title: 'Безопасная привязанность', items: [
+          'Прямо называет чувства',
+          'Просит поддержку словами, не манипуляциями',
+          'Толерантен к разлуке',
+          'После конфликта возвращается, признаёт свою часть',
+          'Поддерживает сфокусированно на вашей проблеме'
+        ]},
+        { title: 'Способность к рефлексии', items: [
+          'Может сказать: «возможно, она не хотела обидеть»',
+          'Корректирует интерпретацию при новой информации',
+          'Признаёт: «я реагирую острее, потому что у меня плохой день»'
+        ]},
+        { title: 'Тревожные паттерны', inverted: true, items: [
+          'Постоянно проверяет: «ты на меня не злишься?»',
+          'Гипер-реагирует на задержку ответа',
+          'Ревнует к вашим другим друзьям',
+          'Обесценивает близость: «мне никто не нужен»',
+          'В стрессе пропадает полностью',
+          'Парадокс «приблизиться-отдалиться», тестирует вас'
+        ]}
+      ]
+    },
+    { id: 'empathy', number: 'IV', title: 'Эмпатия: настоящая или выборочная',
+      intro: 'Три компонента — когнитивная, аффективная, compassionate (Decety & Jackson, 2004). Dark empath (Heym et al., 2021) — самый опасный профиль.',
+      type: 'scale',
+      items: [
+        'Эмпатия переходит в действие, не только в слова',
+        'Помнит детали вашей проблемы через неделю/месяц',
+        'Одинаково эмпатичен с аудиторией и без',
+        'Спрашивает: «как это закончилось?», «как ты сейчас?»',
+        'Принимает хорошие новости так же хорошо, как плохие',
+        'Меняет поведение, услышав, что оно ранит',
+        'Способен сказать: «сейчас не в ресурсе, но я рядом»',
+        'Признаёт, что может не понять ваш опыт',
+        'После тяжёлого разговора я чувствую облегчение'
+      ]
+    },
+    { id: 'capitalization', number: 'V', title: 'Реакция на успехи и неудачи',
+      intro: 'Capitalization (Gable et al., 2004): реакция на хорошие новости предсказывает качество отношений. Contempt Готтмана — #1 предиктор распада.',
+      type: 'scale',
+      items: [
+        'На мой успех — искренняя радость, уточняющие вопросы',
+        'Не обесценивает: «это же не так сложно», «а вот X»',
+        'Не уходит в телефон, когда я рад',
+        'Помнит важные события, спрашивает как прошло',
+        'Слушает плохую новость без спешки починить',
+        'Валидирует чувства прежде чем давать советы',
+        'Не использует мою уязвимость для шуток потом',
+        'Позитивных взаимодействий значительно больше, чем негативных'
+      ]
+    },
+    { id: 'gottman', number: 'VI', title: 'Четыре всадника (Готтман)',
+      intro: 'В лонгитюдных данных Готтмана эти четыре паттерна предсказывают распад с 90%+ точностью. Contempt — самый сильный предиктор.',
+      type: 'check', inverted: true,
+      items: [
+        'Criticism — атакует характер («ты всегда», «ты никогда»), а не поведение',
+        'Contempt — сарказм свысока, закатывает глаза, передразнивает',
+        'Defensiveness — на обратную связь переходит в контр-обвинения',
+        'Stonewalling — на сложные разговоры молча уходит надолго'
+      ]
+    },
+    { id: 'manipulation', number: 'VII', title: 'Паттерны манипуляций',
+      intro: 'Газлайтинг (Abramson 2014; Sweet 2019), DARVO (Freyd 1997), love bombing, coercive control (Stark 2007). Важно: паттерн, не эпизод.',
+      type: 'check', inverted: true,
+      groups: [
+        { title: 'Газлайтинг', items: [
+          'Отрицает очевидно произошедшее',
+          'Обесценивает чувства: «ты преувеличиваешь»',
+          'Оспаривает мою память',
+          'После его реплик я часто сомневаюсь в своём восприятии',
+          'Ощущение «схожу с ума» именно в общении с ним'
+        ]},
+        { title: 'DARVO', items: [
+          'На попытку обсудить проблему — отрицает факт',
+          'Атакует надёжность: «ты мстишь», «у тебя проблемы»',
+          'Переворачивает: «это ТЫ на меня нападаешь»',
+          'Собирает свидетелей на свою сторону'
+        ]},
+        { title: 'Love bombing и циклы', items: [
+          'В начале — интенсивность несоразмерная сроку',
+          'На мелкие «обиды» — резкое похолодание',
+          'Циклы идеализации-обесценивания-возвращения',
+          'Интенсивность такова, что не остаётся времени на других'
+        ]},
+        { title: 'Контроль и шантаж', items: [
+          'Требует отчёта — с кем общаюсь, где был',
+          'Санкционирует попытки расширить круг общения',
+          'Ожидает 24/7, обижается на время без него',
+          'Угрозы — разрыва, распространения, самоповреждения',
+          '«Ты ДОЛЖЕН, я для тебя столько сделал»',
+          '«Ты ужасный, раз отказываешь»',
+          'Silent treatment днями в наказание',
+          'Цикл холод-тепло-холод без логики',
+          'Triangulation: «X сказал, что ты…»'
+        ]}
+      ]
+    },
+    { id: 'boundaries', number: 'VIII', title: 'Границы и уважение',
+      intro: 'Самый экономичный тест этичности — реакция на ваше «нет». Связан с HEXACO H-H и исследованиями Keltner о власти.',
+      type: 'scale',
+      items: [
+        'Принимает моё «нет» с первого раза, без давления',
+        'Уважает, когда я не хочу обсуждать тему',
+        'Не лезет в мою приватность — телефон, переписки',
+        'Не давит на ускоренную близость',
+        'Принимает моё время с другими без ревности',
+        'Поддерживает мой выбор, даже если не согласен',
+        'Спрашивает согласия — на контакт, на публикацию фото',
+        'Когда устанавливаю новую границу — меняет поведение',
+        'Не навязывает мнение о моей внешности, работе',
+        'Способен переносить моё несогласие',
+        'Даёт пространство остыть после спора'
+      ]
+    },
+    { id: 'symmetry', number: 'IX', title: 'Симметрия вложений',
+      intro: 'Social exchange theory (Thibaut & Kelley), norm of reciprocity (Gouldner). Hall (2019): 200+ часов для близкой дружбы.',
+      type: 'scale',
+      items: [
+        'Инициатива контакта распределена поровну',
+        'Встречи предлагает и он',
+        'Паритет расходов на долгой дистанции',
+        'Помогает в трудном не меньше, чем я ему',
+        'Время разговора — не он говорит 80%+',
+        'Задаёт вопросы о моей жизни',
+        'Помнит ключевые события, имена близких',
+        'Интерес ко мне сохраняется, когда я ничем не полезен',
+        'Вкладывает время и внимание, не только подарки'
+      ]
+    },
+    { id: 'internal-barometer', number: 'X', title: 'Ваш внутренний барометр',
+      intro: 'Моментальная интуиция о лжи ненадёжна (Bond & DePaulo, 2006: 54%). Но накопленные ощущения — надёжный сигнал.',
+      type: 'scale',
+      items: [
+        'После общения я чаще энергизирован, чем опустошён',
+        'Рядом с ним я более собой, не менее',
+        'Могу расслабиться, не «на страже»',
+        'Уверен в своей адекватности после разговоров',
+        'Могу быть уязвимым, не скрываю слабости',
+        'Легко быть честным, не подбираю слова',
+        'Расстраиваюсь, когда он не может встретиться',
+        'Не боюсь его реакции на неприятные новости',
+        'Хвалю его другим от искренности',
+        'Представляя жизнь без этой дружбы — чувствую горе',
+        'Могу сказать «нет» без страха последствий'
+      ]
+    },
+    { id: 'influence', number: 'XI', title: 'Влияние на вашу жизнь',
+      intro: 'Holt-Lunstad (2010): сильные связи = +50% шансов выживания. Emotional contagion (Hatfield), co-rumination (Rose & Rudolph).',
+      type: 'scale',
+      items: [
+        'После времени с ним настроение улучшается',
+        'В его присутствии принимаю решения, которыми горжусь',
+        'В его компании не переедаю/перепиваю/перетрачиваюсь',
+        'Мои амбиции рядом с ним растут',
+        'Не становлюсь циничнее, не сплетничаю больше',
+        'Становлюсь лучшей версией себя',
+        'Другие близкие замечают позитивные изменения',
+        'Он познакомил меня с новыми людьми/идеями',
+        'Разговоры расширяют кругозор'
+      ]
+    }
+  ];
+
+  var state = {};
+  var personName = '';
+  var saveTimeout = null;
+
+  function loadState() {
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) state = JSON.parse(saved) || {};
+      var name = localStorage.getItem(NAME_KEY);
+      if (name) personName = name;
+    } catch (e) { state = {}; }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(NAME_KEY, personName);
+      showSaveIndicator();
+    } catch (e) {}
+  }
+
+  function debouncedSave() {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveState, 400);
+  }
+
+  function showSaveIndicator() {
+    var el = document.getElementById('save-indicator');
+    if (!el) return;
+    el.classList.add('show');
+    setTimeout(function() { el.classList.remove('show'); }, 1200);
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function(c) {
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function groupKeyBase(sectionId, groupTitle) {
+    return sectionId + '-g-' + groupTitle.replace(/\s+/g, '_');
+  }
+
+  function buildSection(section) {
+    var wrap = document.createElement('div');
+    wrap.className = 'section';
+    wrap.id = 'section-' + section.id;
+
+    var header = document.createElement('div');
+    header.className = 'section-header';
+    header.addEventListener('click', function() { wrap.classList.toggle('collapsed'); });
+
+    var main = document.createElement('div');
+    main.className = 'section-header-main';
+
+    var num = document.createElement('span');
+    num.className = 'section-number';
+    num.textContent = 'Раздел ' + section.number;
+    main.appendChild(num);
+
+    var title = document.createElement('div');
+    title.className = 'section-title';
+    title.textContent = section.title;
+    main.appendChild(title);
+
+    header.appendChild(main);
+
+    var toggle = document.createElement('span');
+    toggle.className = 'section-toggle';
+    toggle.textContent = '▾';
+    header.appendChild(toggle);
+
+    wrap.appendChild(header);
+
+    var body = document.createElement('div');
+    body.className = 'section-body';
+
+    var intro = document.createElement('div');
+    intro.className = 'section-intro';
+    intro.textContent = section.intro;
+    body.appendChild(intro);
+
+    if (section.type === 'scale') {
+      section.items.forEach(function(text, idx) {
+        body.appendChild(buildScaleItem(section.id, idx, text));
+      });
+      body.appendChild(buildScoreDisplay(section.id, 'scale'));
+    } else if (section.type === 'check') {
+      if (section.groups) {
+        section.groups.forEach(function(group) {
+          var subTitle = document.createElement('div');
+          subTitle.className = 'subsection';
+          subTitle.textContent = group.title;
+          body.appendChild(subTitle);
+          var keyBase = groupKeyBase(section.id, group.title);
+          group.items.forEach(function(text, idx) {
+            body.appendChild(buildCheckItem(keyBase, idx, text));
+          });
+        });
+      } else {
+        section.items.forEach(function(text, idx) {
+          body.appendChild(buildCheckItem(section.id, idx, text));
+        });
+      }
+      body.appendChild(buildScoreDisplay(section.id, 'check', section.inverted));
+    }
+
+    wrap.appendChild(body);
+    return wrap;
+  }
+
+  function buildScaleItem(sectionId, idx, text) {
+    var key = sectionId + '-' + idx;
+    var current = state[key];
+
+    var item = document.createElement('div');
+    item.className = 'item';
+
+    var textDiv = document.createElement('div');
+    textDiv.className = 'item-text';
+    var numSpan = document.createElement('span');
+    numSpan.className = 'item-number';
+    numSpan.textContent = (idx + 1) + '.';
+    textDiv.appendChild(numSpan);
+    textDiv.appendChild(document.createTextNode(' ' + text));
+    item.appendChild(textDiv);
+
+    var scale = document.createElement('div');
+    scale.className = 'scale';
+
+    var scaleLabel = document.createElement('span');
+    scaleLabel.className = 'scale-label';
+    scaleLabel.textContent = 'Оцените от 1 до 5';
+    scale.appendChild(scaleLabel);
+
+    for (var i = 1; i <= 5; i++) {
+      (function(n) {
+        var btn = document.createElement('button');
+        btn.className = 'scale-btn' + (current === n ? ' active' : '');
+        btn.textContent = n;
+        btn.type = 'button';
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          setScale(key, n);
+        });
+        scale.appendChild(btn);
+      })(i);
+    }
+
+    item.appendChild(scale);
+
+    var ends = document.createElement('div');
+    ends.className = 'scale-ends';
+    var left = document.createElement('span');
+    left.textContent = 'Почти никогда';
+    var right = document.createElement('span');
+    right.textContent = 'Почти всегда';
+    ends.appendChild(left);
+    ends.appendChild(right);
+    item.appendChild(ends);
+
+    return item;
+  }
+
+  function buildCheckItem(keyBase, idx, text) {
+    var key = keyBase + '-' + idx;
+    var checked = !!state[key];
+
+    var label = document.createElement('label');
+    label.className = 'check';
+
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = checked;
+
+    var textSpan = document.createElement('span');
+    textSpan.className = 'check-text' + (checked ? ' checked' : '');
+    textSpan.textContent = text;
+
+    checkbox.addEventListener('change', function() {
+      setCheck(key, checkbox.checked, textSpan);
+    });
+
+    label.appendChild(checkbox);
+    label.appendChild(textSpan);
+
+    return label;
+  }
+
+  function buildScoreDisplay(sectionId, type, inverted) {
+    var score = document.createElement('div');
+    score.className = 'section-score';
+    score.id = 'score-' + sectionId;
+
+    var labelSpan = document.createElement('span');
+    if (type === 'scale') labelSpan.textContent = 'Средняя по разделу';
+    else labelSpan.textContent = inverted ? 'Тревожных отметок' : 'Отмечено';
+    score.appendChild(labelSpan);
+
+    var rightSide = document.createElement('span');
+    rightSide.className = 'section-score-right';
+
+    var val = document.createElement('span');
+    val.className = 'section-score-value';
+    val.id = 'score-val-' + sectionId;
+    val.textContent = type === 'scale' ? '—' : '0';
+    rightSide.appendChild(val);
+
+    var badge = document.createElement('span');
+    badge.className = 'section-score-badge badge-neutral';
+    badge.id = 'score-badge-' + sectionId;
+    badge.textContent = type === 'scale' ? 'не заполнено' : '—';
+    rightSide.appendChild(badge);
+
+    score.appendChild(rightSide);
+    return score;
+  }
+
+  function setScale(key, value) {
+    if (state[key] === value) delete state[key];
+    else state[key] = value;
+
+    var parts = key.split('-');
+    var idx = parseInt(parts.pop(), 10);
+    var sectionId = parts.join('-');
+    updateScaleButtons(sectionId, idx);
+    updateSectionScore(sectionId);
+    updateProgress();
+    updateSummary();
+    debouncedSave();
+  }
+
+  function updateScaleButtons(sectionId, idx) {
+    var key = sectionId + '-' + idx;
+    var current = state[key];
+    var items = document.querySelectorAll('#section-' + sectionId + ' .item');
+    if (items[idx]) {
+      var btns = items[idx].querySelectorAll('.scale-btn');
+      for (var i = 0; i < btns.length; i++) {
+        if (current === i + 1) btns[i].classList.add('active');
+        else btns[i].classList.remove('active');
+      }
+    }
+  }
+
+  function setCheck(key, checked, textSpan) {
+    if (checked) {
+      state[key] = true;
+      if (textSpan) textSpan.classList.add('checked');
+    } else {
+      delete state[key];
+      if (textSpan) textSpan.classList.remove('checked');
+    }
+    var sectionId = null;
+    for (var i = 0; i < sections.length; i++) {
+      if (key.indexOf(sections[i].id + '-') === 0) {
+        sectionId = sections[i].id;
+        break;
+      }
+    }
+    if (sectionId) updateSectionScore(sectionId);
+    updateProgress();
+    updateSummary();
+    debouncedSave();
+  }
+
+  function sectionScaleStats(section) {
+    var values = [];
+    for (var i = 0; i < section.items.length; i++) {
+      var v = state[section.id + '-' + i];
+      if (v !== undefined) values.push(v);
+    }
+    if (values.length === 0) return { avg: null, filled: 0, total: section.items.length };
+    var sum = 0;
+    for (var j = 0; j < values.length; j++) sum += values[j];
+    return { avg: sum / values.length, filled: values.length, total: section.items.length };
+  }
+
+  function sectionCheckStats(section) {
+    var total = 0, checked = 0;
+    if (section.groups) {
+      for (var i = 0; i < section.groups.length; i++) {
+        var g = section.groups[i];
+        total += g.items.length;
+        var keyBase = groupKeyBase(section.id, g.title);
+        for (var j = 0; j < g.items.length; j++) {
+          if (state[keyBase + '-' + j]) checked++;
+        }
+      }
+    } else {
+      total = section.items.length;
+      for (var k = 0; k < section.items.length; k++) {
+        if (state[section.id + '-' + k]) checked++;
+      }
+    }
+    return { checked: checked, total: total, inverted: !!section.inverted };
+  }
+
+  function scaleBadge(avg) {
+    if (avg >= 4.0) return { label: 'здоровый паттерн', cls: 'badge-green' };
+    if (avg >= 3.0) return { label: 'смешанно', cls: 'badge-amber' };
+    return { label: 'тревожно', cls: 'badge-red' };
+  }
+
+  function checkBadge(checked, total, inverted) {
+    if (inverted) {
+      if (checked === 0) return { label: 'чисто', cls: 'badge-green' };
+      if (checked <= 2) return { label: 'отдельные маркеры', cls: 'badge-amber' };
+      return { label: 'паттерн', cls: 'badge-red' };
+    } else {
+      var ratio = total === 0 ? 0 : checked / total;
+      if (ratio >= 0.7) return { label: 'сильный', cls: 'badge-green' };
+      if (ratio >= 0.4) return { label: 'частично', cls: 'badge-amber' };
+      if (ratio > 0) return { label: 'мало', cls: 'badge-red' };
+      return { label: '—', cls: 'badge-neutral' };
+    }
+  }
+
+  function updateSectionScore(sectionId) {
+    var section = null;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].id === sectionId) { section = sections[i]; break; }
+    }
+    if (!section) return;
+
+    var valEl = document.getElementById('score-val-' + sectionId);
+    var badgeEl = document.getElementById('score-badge-' + sectionId);
+    if (!valEl || !badgeEl) return;
+
+    if (section.type === 'scale') {
+      var stats = sectionScaleStats(section);
+      if (stats.avg === null) {
+        valEl.textContent = '—';
+        badgeEl.textContent = 'не заполнено';
+        badgeEl.className = 'section-score-badge badge-neutral';
+      } else {
+        valEl.textContent = stats.avg.toFixed(1);
+        var b = scaleBadge(stats.avg);
+        badgeEl.textContent = b.label;
+        badgeEl.className = 'section-score-badge ' + b.cls;
+      }
+    } else {
+      var cs = sectionCheckStats(section);
+      valEl.textContent = cs.checked + ' из ' + cs.total;
+      var cb = checkBadge(cs.checked, cs.total, cs.inverted);
+      badgeEl.textContent = cb.label;
+      badgeEl.className = 'section-score-badge ' + cb.cls;
+    }
+  }
+
+  function updateAllScores() {
+    for (var i = 0; i < sections.length; i++) updateSectionScore(sections[i].id);
+  }
+
+  function updateProgress() {
+    var requiredTotal = 0, requiredFilled = 0;
+    for (var i = 0; i < sections.length; i++) {
+      var s = sections[i];
+      if (s.type === 'scale') {
+        requiredTotal += s.items.length;
+        for (var j = 0; j < s.items.length; j++) {
+          if (state[s.id + '-' + j] !== undefined) requiredFilled++;
+        }
+      }
+    }
+    var pct = requiredTotal === 0 ? 0 : Math.round((requiredFilled / requiredTotal) * 100);
+    var fill = document.getElementById('progress-fill');
+    var label = document.getElementById('progress-label');
+    var percent = document.getElementById('progress-percent');
+    if (fill) fill.style.width = pct + '%';
+    if (label) label.textContent = 'Шкалы: ' + requiredFilled + ' из ' + requiredTotal;
+    if (percent) percent.textContent = pct + '%';
+  }
+
+  function updateSummary() {
+    var grid = document.getElementById('summary-grid');
+    var interp = document.getElementById('summary-interpretation');
+    if (!grid || !interp) return;
+
+    var scaleAvgs = [];
+    var redFlags = 0;
+    var gottmanHorsemen = 0;
+
+    for (var i = 0; i < sections.length; i++) {
+      var s = sections[i];
+      if (s.type === 'scale') {
+        var stats = sectionScaleStats(s);
+        if (stats.avg !== null) scaleAvgs.push(stats.avg);
+      } else {
+        var cs = sectionCheckStats(s);
+        if (cs.inverted) redFlags += cs.checked;
+        if (s.id === 'gottman') gottmanHorsemen = cs.checked;
+      }
+    }
+
+    var overallScale = null;
+    if (scaleAvgs.length > 0) {
+      var sum = 0;
+      for (var k = 0; k < scaleAvgs.length; k++) sum += scaleAvgs[k];
+      overallScale = sum / scaleAvgs.length;
+    }
+
+    grid.innerHTML = '';
+    grid.appendChild(makeCard('Средняя по шкалам', overallScale === null ? '—' : overallScale.toFixed(1) + ' / 5.0'));
+    grid.appendChild(makeCard('Тревожных маркеров', String(redFlags)));
+    grid.appendChild(makeCard('Всадников Готтмана', gottmanHorsemen + ' из 4'));
+
+    var nameDisp = personName ? personName : 'этот человек';
+    var parts = [];
+
+    if (scaleAvgs.length === 0 && redFlags === 0) {
+      interp.innerHTML = 'Заполните разделы, чтобы увидеть сводную оценку. Чек-лист — инструмент для ясности, не для диагнозов.';
+      return;
+    }
+
+    if (overallScale !== null) {
+      if (overallScale >= 4.0) parts.push('По шкалам <strong>' + esc(nameDisp) + '</strong> проявляет в целом <strong>здоровые паттерны</strong> (средняя ' + overallScale.toFixed(1) + ').');
+      else if (overallScale >= 3.0) parts.push('По шкалам картина <strong>смешанная</strong> (средняя ' + overallScale.toFixed(1) + '). Обратите внимание на разделы с низкими оценками.');
+      else parts.push('По шкалам <strong>' + esc(nameDisp) + '</strong> набирает <strong>низкие оценки</strong> (средняя ' + overallScale.toFixed(1) + '). Серьёзный сигнал.');
+    }
+
+    if (gottmanHorsemen >= 2) parts.push('Отмечено ' + gottmanHorsemen + ' из 4 «всадников Готтмана» — <strong>сильный предиктор распада отношений</strong>.');
+    else if (gottmanHorsemen === 1) parts.push('Отмечен 1 из 4 «всадников» — следите за паттерном.');
+
+    if (redFlags >= 6) parts.push('Набрано ' + redFlags + ' тревожных маркеров — <strong>паттерн, не случайность</strong>. Подумайте о дистанции.');
+    else if (redFlags >= 3) parts.push(redFlags + ' тревожных маркеров — стоит внимательно наблюдать.');
+    else if (redFlags > 0) parts.push(redFlags + ' тревожных маркеров — возможно, эпизоды.');
+
+    parts.push('<em>Напоминание:</em> паттерны за месяцы важнее эпизодов. Стресс, травма, нейроотличия могут имитировать тревожные признаки.');
+
+    interp.innerHTML = parts.join(' ');
+  }
+
+  function makeCard(label, value) {
+    var card = document.createElement('div');
+    card.className = 'summary-card';
+    var l = document.createElement('div');
+    l.className = 'summary-card-label';
+    l.textContent = label;
+    var v = document.createElement('div');
+    v.className = 'summary-card-value';
+    v.textContent = value;
+    card.appendChild(l);
+    card.appendChild(v);
+    return card;
+  }
+
+  function exportData() {
+    var lines = [
+      'Чек-лист: анализ знакомого',
+      'О ком: ' + (personName || '(не указано)'),
+      'Дата: ' + new Date().toLocaleDateString('ru-RU'),
+      ''
+    ];
+
+    sections.forEach(function(section) {
+      lines.push('');
+      lines.push('=== ' + section.number + '. ' + section.title.toUpperCase() + ' ===');
+      if (section.type === 'scale') {
+        section.items.forEach(function(text, idx) {
+          var v = state[section.id + '-' + idx];
+          lines.push((v !== undefined ? '[' + v + ']' : '[ ]') + ' ' + text);
+        });
+        var stats = sectionScaleStats(section);
+        if (stats.avg !== null) lines.push('-> Средняя: ' + stats.avg.toFixed(1) + ' / 5.0');
+      } else {
+        if (section.groups) {
+          section.groups.forEach(function(g) {
+            lines.push('  -- ' + g.title + ' --');
+            var kb = groupKeyBase(section.id, g.title);
+            g.items.forEach(function(text, idx) {
+              var v = state[kb + '-' + idx];
+              lines.push((v ? '[v]' : '[ ]') + ' ' + text);
+            });
+          });
+        } else {
+          section.items.forEach(function(text, idx) {
+            var v = state[section.id + '-' + idx];
+            lines.push((v ? '[v]' : '[ ]') + ' ' + text);
+          });
+        }
+        var cs = sectionCheckStats(section);
+        lines.push('-> ' + (cs.inverted ? 'Тревожных' : 'Отмечено') + ': ' + cs.checked + ' из ' + cs.total);
+      }
+    });
+
+    var text = lines.join('\n');
+    var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'checklist-' + (personName || 'person').replace(/\s+/g, '_') + '-' + Date.now() + '.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function resetAll() {
+    if (!confirm('Очистить все ответы? Это действие нельзя отменить.')) return;
+    state = {};
+    personName = '';
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(NAME_KEY);
+    } catch (e) {}
+    document.getElementById('person-name').value = '';
+    renderAll();
+  }
+
+  function renderAll() {
+    var container = document.getElementById('sections-container');
+    container.innerHTML = '';
+    sections.forEach(function(section) {
+      container.appendChild(buildSection(section));
+    });
+    updateAllScores();
+    updateProgress();
+    updateSummary();
+  }
+
+  function init() {
+    try {
+      loadState();
+      var nameInput = document.getElementById('person-name');
+      if (nameInput) {
+        nameInput.value = personName;
+        nameInput.addEventListener('input', function() {
+          personName = nameInput.value;
+          updateSummary();
+          debouncedSave();
+        });
+      }
+      document.getElementById('btn-print').addEventListener('click', function() { window.print(); });
+      document.getElementById('btn-export').addEventListener('click', exportData);
+      document.getElementById('btn-reset').addEventListener('click', resetAll);
+      renderAll();
+    } catch (err) {
+      var container = document.getElementById('sections-container');
+      if (container) {
+        container.innerHTML = '<div style="padding: 30px; background: #fff; border: 1px solid #ccc; color: #900;">Ошибка загрузки: ' + (err && err.message ? err.message : err) + '</div>';
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>
