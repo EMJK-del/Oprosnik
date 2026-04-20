@@ -475,11 +475,21 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
       });
       body.appendChild(buildScoreDisplay(section.id, 'scale'));
     } else if (section.type === 'check') {
+      var hasMixedGroups = false;
+      if (section.groups) {
+        var hasGreenGroup = false, hasRedGroup = false;
+        section.groups.forEach(function(g) {
+          if (g.inverted) hasRedGroup = true;
+          else hasGreenGroup = true;
+        });
+        hasMixedGroups = hasGreenGroup && hasRedGroup;
+      }
       if (section.groups) {
         section.groups.forEach(function(group) {
           var subTitle = document.createElement('div');
           subTitle.className = 'subsection';
-          subTitle.textContent = group.title;
+          if (group.inverted) subTitle.textContent = '⚠ ' + group.title;
+          else subTitle.textContent = group.title;
           body.appendChild(subTitle);
           var keyBase = groupKeyBase(section.id, group.title);
           group.items.forEach(function(text, idx) {
@@ -491,7 +501,7 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
           body.appendChild(buildCheckItem(section.id, idx, text));
         });
       }
-      body.appendChild(buildScoreDisplay(section.id, 'check', section.inverted));
+      body.appendChild(buildScoreDisplay(section.id, 'check', section.inverted, hasMixedGroups));
     }
 
     wrap.appendChild(body);
@@ -576,13 +586,14 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
     return label;
   }
 
-  function buildScoreDisplay(sectionId, type, inverted) {
+  function buildScoreDisplay(sectionId, type, inverted, mixed) {
     var score = document.createElement('div');
     score.className = 'section-score';
     score.id = 'score-' + sectionId;
 
     var labelSpan = document.createElement('span');
     if (type === 'scale') labelSpan.textContent = 'Средняя по разделу';
+    else if (mixed) labelSpan.textContent = 'Зелёных / тревожных';
     else labelSpan.textContent = inverted ? 'Тревожных отметок' : 'Отмечено';
     score.appendChild(labelSpan);
 
@@ -666,23 +677,47 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
   }
 
   function sectionCheckStats(section) {
-    var total = 0, checked = 0;
+    // Returns: greenChecked/greenTotal (good to check), redChecked/redTotal (alarm flags)
+    var greenChecked = 0, greenTotal = 0;
+    var redChecked = 0, redTotal = 0;
+    var sectionInverted = !!section.inverted;
+
     if (section.groups) {
       for (var i = 0; i < section.groups.length; i++) {
         var g = section.groups[i];
-        total += g.items.length;
         var keyBase = groupKeyBase(section.id, g.title);
+        var groupInverted = !!g.inverted;
         for (var j = 0; j < g.items.length; j++) {
-          if (state[keyBase + '-' + j]) checked++;
+          var isChecked = !!state[keyBase + '-' + j];
+          if (groupInverted) {
+            redTotal++;
+            if (isChecked) redChecked++;
+          } else {
+            greenTotal++;
+            if (isChecked) greenChecked++;
+          }
         }
       }
     } else {
-      total = section.items.length;
       for (var k = 0; k < section.items.length; k++) {
-        if (state[section.id + '-' + k]) checked++;
+        var isC = !!state[section.id + '-' + k];
+        if (sectionInverted) {
+          redTotal++;
+          if (isC) redChecked++;
+        } else {
+          greenTotal++;
+          if (isC) greenChecked++;
+        }
       }
     }
-    return { checked: checked, total: total, inverted: !!section.inverted };
+    return {
+      greenChecked: greenChecked, greenTotal: greenTotal,
+      redChecked: redChecked, redTotal: redTotal,
+      // Legacy fields for compat
+      checked: greenChecked + redChecked,
+      total: greenTotal + redTotal,
+      inverted: sectionInverted
+    };
   }
 
   function scaleBadge(avg) {
@@ -730,10 +765,29 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
       }
     } else {
       var cs = sectionCheckStats(section);
-      valEl.textContent = cs.checked + ' из ' + cs.total;
-      var cb = checkBadge(cs.checked, cs.total, cs.inverted);
-      badgeEl.textContent = cb.label;
-      badgeEl.className = 'section-score-badge ' + cb.cls;
+      var hasGreen = cs.greenTotal > 0;
+      var hasRed = cs.redTotal > 0;
+
+      if (hasGreen && hasRed) {
+        // Mixed section (e.g. Этика) — show both counts
+        valEl.textContent = '✓ ' + cs.greenChecked + ' / ⚠ ' + cs.redChecked;
+        // Badge is based on red flags primarily
+        var cbm = checkBadge(cs.redChecked, cs.redTotal, true);
+        badgeEl.textContent = cbm.label;
+        badgeEl.className = 'section-score-badge ' + cbm.cls;
+      } else if (hasRed) {
+        // Pure alarm section (e.g. Gottman) — inverted logic
+        valEl.textContent = cs.redChecked + ' из ' + cs.redTotal;
+        var cbr = checkBadge(cs.redChecked, cs.redTotal, true);
+        badgeEl.textContent = cbr.label;
+        badgeEl.className = 'section-score-badge ' + cbr.cls;
+      } else {
+        // Pure positive section
+        valEl.textContent = cs.greenChecked + ' из ' + cs.greenTotal;
+        var cbg = checkBadge(cs.greenChecked, cs.greenTotal, false);
+        badgeEl.textContent = cbg.label;
+        badgeEl.className = 'section-score-badge ' + cbg.cls;
+      }
     }
   }
 
@@ -777,8 +831,8 @@ footer { text-align: center; padding: 30px 16px 0; color: var(--muted); font-siz
         if (stats.avg !== null) scaleAvgs.push(stats.avg);
       } else {
         var cs = sectionCheckStats(s);
-        if (cs.inverted) redFlags += cs.checked;
-        if (s.id === 'gottman') gottmanHorsemen = cs.checked;
+        redFlags += cs.redChecked;
+        if (s.id === 'gottman') gottmanHorsemen = cs.redChecked;
       }
     }
 
